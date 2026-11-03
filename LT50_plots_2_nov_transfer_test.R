@@ -3,7 +3,7 @@ library(dplyr)
 library(drc)
 library(ggplot2)
 
-survival_data <- read.table("C:/Users/User/OneDrive/Documents/Research/Data analysis/24h_arrest_predation_transfer_type.txt",
+survival_data <- read.table("C:/Users/pheebsy/OneDrive/Documents/Research/Data analysis/24h_arrest_predation_transfer_type.txt",
                             header = TRUE, sep = "\t")
 
 colnames(survival_data) <- c("Time", "Transfer", "E. coli", "C. neoformans", "S. cerevisiae")
@@ -28,7 +28,7 @@ mean_data <- adjusted_data %>%
 
 mean_data_transfer <- adjusted_data %>% 
   group_by(Food, Transfer, Time) %>%
-  filter(0 <= Time => 3) %>%
+  filter( Time == 0, Time >= 3)  %>%
   summarise(Survival_pct = mean(Survival_pct), .groups = "drop")
 
 food_cols <- c("E. coli" = "#e66101",
@@ -53,7 +53,7 @@ survival_plot <- ggplot() +
         axis.text = element_text(size=20),
         axis.title = element_text(size=24))
 print(survival_plot)
-ggsave("C:/Users/User/OneDrive/Documents/Research/Results/LT50_transfer_test_plot.png", plot = survival_plot, width = 10, height = 8, dpi = 600)
+ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/LT50_transfer_test_plot.png", plot = survival_plot, width = 10, height = 8, dpi = 600)
 
 trans_cols <- c("Filter" = "#e66101",
                "Chunk" = "#5e3c99",
@@ -78,7 +78,7 @@ transfer_plot <- ggplot() +
         axis.text = element_text(size=20),
         axis.title = element_text(size=24))
 print(transfer_plot)
-ggsave("C:/Users/User/OneDrive/Documents/Research/Results/LT50_transfer_comparison_test_plot.png", plot = transfer_plot, width = 10, height = 8, dpi = 600)
+ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/LT50_transfer_comparison_test_plot.png", plot = transfer_plot, width = 10, height = 8, dpi = 600)
 
 lt50_model <- drm(Dead/Total ~ Time, weights = Total, curveid = Food,
                   data = adjusted_data, fct = LL.2(), type = "binomial")
