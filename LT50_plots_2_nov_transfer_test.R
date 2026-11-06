@@ -26,15 +26,10 @@ mean_data <- adjusted_data %>%
   group_by(Food, Time) %>%
   summarise(Survival_pct = mean(Survival_pct), .groups = "drop")
 
-mean_data_transfer <- adjusted_data %>% 
-  group_by(Food, Transfer, Time) %>%
-  filter( Time == 0, Time >= 3)  %>%
-  summarise(Survival_pct = mean(Survival_pct), .groups = "drop")
-
 food_cols <- c("E. coli" = "#e66101",
                "C. neoformans" = "#5e3c99",
                "S. cerevisiae" = "#b2abd2")
-
+#Normal Death curve ----
 survival_plot <- ggplot() +
   geom_step(data = mean_data,
             aes(x = Time, y = Survival_pct, colour = Food), direction = "hv", linewidth = 1.5)+
@@ -55,30 +50,44 @@ survival_plot <- ggplot() +
 print(survival_plot)
 ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/LT50_transfer_test_plot.png", plot = survival_plot, width = 10, height = 8, dpi = 600)
 
+
+#Transfer Death Curve ----
 trans_cols <- c("Filter" = "#e66101",
                "Chunk" = "#5e3c99",
                "Wash" = "#b2abd2")
 
-transfer_plot <- ggplot() +
-  geom_step(data = mean_data_transfer,
-            aes(x = Time, y = Survival_pct, colour = Transfer), direction = "hv", linewidth = 1.5)+
-  geom_point(data = adjusted_data, 
-             aes (x = Time, y = Survival_pct, colour = Transfer), alpha = 0.3, size = 3) +
-  geom_point(data = mean_data_transfer, 
-             aes (x = Time, y = Survival_pct, colour = Transfer), size = 3)+
-  facet_wrap(~ Food)+
-  labs(title = NULL, x = "Time (hours)",
-       y = "% Survival", colour = "Transfer type")+
-  
-  scale_colour_manual(values = trans_cols,
-                      labels = function(x) parse(text = paste0("italic('", x, "')")))+
-  theme_classic()+
-  theme(legend.text = element_text(size = 16),
-        legend.title = element_text(size = 18),
-        axis.text = element_text(size=20),
-        axis.title = element_text(size=24))
-print(transfer_plot)
-ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/LT50_transfer_comparison_test_plot.png", plot = transfer_plot, width = 10, height = 8, dpi = 600)
+transfer_data <- adjusted_data %>% filter(Time <=3)
+
+mean_transfer_data <- transfer_data %>%
+  filter(Time == 3) %>%
+  group_by(Transfer) %>%
+  summarise(mean_surv = mean(Survival_pct, na.rm = TRUE), .groups = "drop")
+
+
+
+other_transfer_plot <- ggplot()+
+  geom_jitter(data = transfer_data, 
+              aes(x = Time, y = Survival_pct, colour = Food),
+              width = 0.1, alpha = 0.6, size = 2)+
+  geom_hline(data = mean_transfer_data, 
+                aes(yintercept = mean_surv), colour = "black", linewidth = 0.8)+
+  facet_wrap(~ Transfer) +
+  labs(x = "Time(hours", y = "% Survival")+
+  scale_colour_manual(values = food_cols)+
+  theme_classic()
+print(other_transfer_plot)
+
+#transfer_plot <- adjusted_data %>%
+  #filter(Time <=3) %>%
+  #ggplot(aes(x = Time, y = Survival_pct, colour = Transfer)) +
+  #geom_point(alpha = 0.4, size = 2)+
+  #facet_wrap(~ Food)+
+  #labs(title = NULL, x = "Time (hours)",
+      # y = "% Survival", colour = "Transfer type")+
+  #scale_colour_manual(values = trans_cols)+
+  #theme_classic()
+#print(transfer_plot)
+ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/LT50_transfer_comparison_test_plot.png", plot = other_transfer_plot, width = 10, height = 8, dpi = 600)
 
 lt50_model <- drm(Dead/Total ~ Time, weights = Total, curveid = Food,
                   data = adjusted_data, fct = LL.2(), type = "binomial")
