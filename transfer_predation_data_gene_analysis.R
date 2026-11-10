@@ -4,12 +4,12 @@ library(coin)
 library(ggsignif)
 library(RefSeeker)
 
-ct_data_1 <- read.table("C:/Users/pheebsy/OneDrive/Documents/Research/Data analysis/ACT_GAP_LAC_transfer_predation_samples_4_nov_2026.txt",
+ct_data_1 <- read.table("C:/Users/User/OneDrive/Documents/Research/Data analysis/ACT_GAP_LAC_transfer_predation_samples_4_nov_2026.txt",
                       header = TRUE, sep = "\t") 
 
 colnames(ct_data_1) <- c("Group", "Well", "Target", "Content", "Sample", "Cq")
 
-ct_data_2 <- read.table("C:/Users/pheebsy/OneDrive/Documents/Research/Data analysis/URE_CAP_COX_transfer_predation_ct_values.txt",
+ct_data_2 <- read.table("C:/Users/User/OneDrive/Documents/Research/Data analysis/URE_CAP_COX_transfer_predation_ct_values.txt",
                         header = TRUE, sep = "\t")
 
 colnames(ct_data_2) <- c("Well", "Target", "Content", "Sample", "Group", "Cq")
@@ -123,10 +123,10 @@ normalised_plot <- plot_normalised_data %>%
         axis.text = element_text(size=14),
         axis.title = element_text(size=24),
         axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
-  labs(y = "Normalised Counts")
+  labs(y = "Normalised Expression")
 
 print(normalised_plot)
-ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/normalised_counts_transfer_qpcr.png", 
+ggsave("C:/Users/User/OneDrive/Documents/Research/Results/normalised_counts_transfer_qpcr.png", 
        plot = normalised_plot, 
        width = 10, 
        height = 8, 
@@ -164,7 +164,7 @@ log_plot <- plot_log_data %>%
         axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
   labs(y = "Relative Gene Expression")
 print(log_plot)
-ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/relative_gene_expression_transfer_qpcr.png", 
+ggsave("C:/Users/User/OneDrive/Documents/Research/Results/relative_gene_expression_transfer_qpcr.png", 
        plot = log_plot, 
        width = 10, 
        height = 8, 
@@ -172,7 +172,7 @@ ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/relative_gene_expre
 
 # plots with old data ----
 
-pick_predation_data <- read.table("C:/Users/pheebsy/Dev/Coding/Masters Stats R/Data-analysis-Masters/test_predation_gene_analysis_data.txt",
+pick_predation_data <- read.table("D:/Documents/University/2026/Results/Data analysis/Code/test_predation_gene_analysis_data.txt",
                                   header = TRUE, sep = "\t")
 
 combined_analysis <- rbind(result_dCt, pick_predation_data)
@@ -210,7 +210,7 @@ log_plot <- plot_log_data_all %>%
         axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
   labs(y = "Relative Gene Expression")
 print(log_plot)
-ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/relative_gene_expression_all_predation_tests.png", 
+ggsave("C:/Users/User/OneDrive/Documents/Research/Results/relative_gene_expression_all_predation_tests.png", 
        plot = log_plot, 
        width = 10, 
        height = 8, 
@@ -250,10 +250,10 @@ normalised_plot <- plot_normalised_data_all %>%
         axis.text = element_text(size=14),
         axis.title = element_text(size=24),
         axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
-  labs(y = "Normalised Counts")
+  labs(y = "Normalised Expression")
 
 print(normalised_plot)
-ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/normalised_counts_all_predation_tests.png", 
+ggsave("C:/Users/User/OneDrive/Documents/Research/Results/normalised_counts_all_predation_tests.png", 
        plot = normalised_plot, 
        width = 10, 
        height = 8, 

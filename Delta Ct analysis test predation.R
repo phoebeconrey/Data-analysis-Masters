@@ -2,7 +2,7 @@ library(tidyverse)
 library(coin)
 library(ggsignif)
 
-ct_data <- read.table("C:/Users/pheebsy/OneDrive/Documents/Research/Data analysis/test_predation_ct_values_r_replicates.txt",
+ct_data <- read.table("C:/Users/User/OneDrive/Documents/Research/Data analysis/test_predation_ct_values_r_replicates.txt",
                         header = TRUE, sep = "\t") 
 
 colnames(ct_data) <- c("Group", "Sample", "Gene", "Ct")
@@ -103,10 +103,10 @@ normalised_plot <- plot_normalised_data %>%
         axis.text = element_text(size=10),
         axis.title = element_text(size=24),
         axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
-  labs(y = "Normalised Counts")
+  labs(y = "Normalised Expression")
 
 print(normalised_plot)
-ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/normalised_counts_test_qpcr.png", 
+ggsave("C:/Users/User/OneDrive/Documents/Research/Results/normalised_counts_test_qpcr.png", 
        plot = normalised_plot, 
        width = 10, 
        height = 8, 
@@ -141,7 +141,7 @@ log_plot <- plot_log_data %>%
         axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
   labs(y = "Relative Gene Expression")
 print(log_plot)
-ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/relative_gene_expression_test_qpcr.png", 
+ggsave("C:/Users/User/OneDrive/Documents/Research/Results/relative_gene_expression_test_qpcr.png", 
        plot = log_plot, 
        width = 10, 
        height = 8, 
