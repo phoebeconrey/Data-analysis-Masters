@@ -1,87 +1,148 @@
-)library(RQdeltaCT)
 library(tidyverse)
 library(coin)
 library(ggsignif)
 
-data <- "C:/Users/User/OneDrive/Documents/Research/Data analysis/test_predation_ct_values_r.txt"
+ct_data <- read.table("C:/Users/pheebsy/OneDrive/Documents/Research/Data analysis/test_predation_ct_values_r_replicates.txt",
+                        header = TRUE, sep = "\t") 
 
-data.Ct <- read_Ct_long(path = data, 
-                        sep = "\t",
-                        dec = ".",
-                        skip = 0,
-                        add.column.Flag = FALSE,
-                        column.Sample = 2,
-                        column.Gene = 3,
-                        column.Ct = 4,
-                        column.Group = 1)
+colnames(ct_data) <- c("Group", "Sample", "Gene", "Ct")
+ct_data <- ct_data %>%
+  rename(
+    Target = Gene,
+    Cq = Ct
+  )
+ct_data$Target <- gsub(fixed("Act 1"), "Actin", ct_data$Target)
 
-data.CtF.ready <- make_Ct_ready(data = data.Ct,
-                                imput.by.mean.within.groups = TRUE)
-data.dCt.exp <- delta_Ct(data = data.CtF.ready,
-                         normalise = TRUE,
-                         ref = c("GAPDH 3", "Act 1"),
-                         transform = TRUE)
+#Gene Expression Analysis function ----
+mean_cq <- function(data){
+  data %>%
+    group_by(Target, Sample, Group) %>%
+    summarise(Cq = mean (Cq, na.rm = TRUE), .groups = "drop")
+}
 
-results.pn.dCt <- RQ_dCt(data = data.dCt.exp,
-                      do.tests = FALSE, 
-                      group.study = "Predated",
-                      group.ref = "Naive")
+average_hk <- function(data, hk_genes) {
+  data %>%
+    filter(Target %in% hk_genes) %>%
+    group_by(Sample) %>%
+    summarise(hk_Ct = mean(Cq, na.rm = TRUE), .groups = "drop")
+}
 
-results.vn.dCt <- RQ_dCt(data = data.dCt.exp,
-                        do.tests = FALSE, 
-                        group.study = "Virulence Control",
-                        group.ref = "Naive")
-results.zero.dCt <- RQ_dCt(data = data.dCt.exp,
-                        do.tests = FALSE, 
-                        group.study = "Naive",
-                        group.ref = "Naive")
-print(results.vn.dCt)
-print(results.pn.dCt)
+deltaCt <- function(data, hk_genes, target_gene){
+  hk = average_hk (data, hk_genes)
+  
+  data %>%
+    filter(Target %in% target_gene) %>%
+    left_join(hk, by = "Sample") %>%
+    mutate(dCt = Cq - hk_Ct)
+}
 
+ddct <- function(data, group.ref){
+  group.ref.mean <- data %>%
+    filter(Group == group.ref) %>%
+    group_by(Target) %>%
+    summarise(ref_dCt = mean(dCt, na.rm = TRUE), .groups = "drop")
+  
+  ddct.result <- data %>%
+    #filter(Group == group.study) %>%
+    left_join(group.ref.mean, by = "Target") %>%
+    mutate(ddCt = dCt - ref_dCt)
+}
 
-naive_comparison <- results.pn.dCt %>%
-  filter(Gene %in% c("Lac 1", "Ure 5")) %>%
-  dplyr::select(Gene, FCh) %>%
-  mutate(Comparison = "Predated vs Naive")
+fCh <- function(data){
+  data %>%
+    mutate(fCh = 2^(-ddCt))
+}
 
-vnaive_comparison <- results.vn.dCt %>%
-  filter(Gene %in% c("Lac 1", "Ure 5")) %>%
-  dplyr::select(Gene, FCh) %>%
-  mutate(Comparison = "37 °C vs Naive")
+log2fCh <- function(data) {
+  data %>% 
+    mutate(log2fCh = log2(fCh))
+}
 
-zero_comparison <- results.zero.dCt %>%
-  filter(Gene %in% c("Lac 1", "Ure 5")) %>%
-  dplyr::select(Gene, FCh) %>%
-  mutate(Comparison = "Naive vs Naive")
+AP_dCt <- function(data, hk_genes, target_gene, group.ref){
+  data %>%
+    mean_cq() %>%
+    deltaCt(hk_genes, target_gene)%>%
+    ddct(group.ref) %>%
+    fCh() %>%
+    log2fCh()
+}
 
-plot_data <- bind_rows(naive_comparison, vnaive_comparison, zero_comparison)
+# Delta Ct Manual ----
+result_dCt <- AP_dCt(ct_data, 
+                     hk_genes = c("Actin", "GAPDH"), 
+                     target_gene = c("Lac 1", "Ure 5"),
+                     group.ref = "Naive")
+print(result_dCt)
 
-plot_data <- plot_data %>%
-  mutate(Comparison = fct_recode(Comparison,
-                                 "Predated" = "Predated vs Naive",
-                                 "37 °C" = "37 °C vs Naive",
-                                 "Naive" = "Naive vs Naive"))
-plot_data <- plot_data %>%
-  mutate(Comparison = fct_relevel(Comparison,
-                                  "Naive",
-                                  "Predated",
-                                  "37 °C"))
+write.table(result_dCt, file = "test_predation_gene_analysis_data.txt", 
+            sep = "\t", row.names = FALSE,
+            quote = FALSE)
 
-log10FCh.plot <- ggplot(plot_data, aes(x = Comparison, y = FCh, fill = Gene)) +
+#plot normalised count ----
+
+plot_normalised_data <- result_dCt %>%
+  dplyr::select(Target, Sample, dCt, Group)
+
+group_cols <- c("Naive" = "#66c2a5",
+                "Temp" = "#74a9cf", 
+                "Predated" = "#a50f15")
+
+normalised_plot <- plot_normalised_data %>% 
+  ggplot(aes(x = Sample, y = dCt, fill = Group))+
   geom_col(position = position_dodge(width = 0.7), width = 0.6) +
-  ylab("Relative Gene Expression")+
-  xlab("")+
-  scale_fill_manual(values = c("Lac 1" = "#5e3c99",
-                                "Ure 5" = "#b2abd2"))+
-  theme_classic()+
-  theme(legend.text = element_text(face = "italic", size = 20),
-        legend.title = element_text(size = 20),
-        axis.text = element_text(size=20),
-         axis.title = element_text(size=24))
+  geom_hline(yintercept = 0) +
+  facet_wrap(~ Target, scales = "free_y")+
+  scale_fill_manual(values = group_cols)+
+  scale_x_discrete(labels = c("CNCE(25)" = "Picked", 
+                              "CN(25)" = "25 °C",
+                              "CN(37)" = "37 °C"))+
+  theme_classic() +
+  theme(strip.text = element_text(face = "italic"),
+        legend.text = element_text(size = 18),
+        legend.title = element_text(size = 18),
+        axis.text = element_text(size=10),
+        axis.title = element_text(size=24),
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
+  labs(y = "Normalised Counts")
 
-print(log10FCh.plot)
-ggsave("C:/Users/User/OneDrive/Documents/Research/Results/relative_gene_expre.png", 
-       plot = log10FCh.plot, 
+print(normalised_plot)
+ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/normalised_counts_test_qpcr.png", 
+       plot = normalised_plot, 
+       width = 10, 
+       height = 8, 
+       dpi = 600)
+
+# plot log fold change ----
+
+plot_log_data <- result_dCt %>%
+  filter(Group != "Naive")%>%
+  dplyr::select(Target, Sample, Group, log2fCh)
+
+gene_cols <- c("Lac 1" = "#5e3c99",
+               "Ure 5" = "#e66101",
+               "CAP 10" = "#b2abd2",
+               "COX 1" = "#fdb863")
+
+log_plot <- plot_log_data %>%
+  ggplot(aes(x = Sample, y = log2fCh, fill = Target))+
+  geom_col(position = position_dodge(width = 0.7), width = 0.6) +
+  geom_hline(yintercept = 0) +
+  facet_grid(Target ~ Group, scales = "free", space = "free_x")+
+  scale_fill_manual(values = gene_cols)+
+  scale_x_discrete(labels = c("CNCE(25)" = "Picked", 
+                              "CN(25)" = "25 °C",
+                              "CN(37)" = "37 °C"))+
+  theme_classic() +
+  theme(strip.text.y = element_text(face = "italic"),
+        legend.text = element_text(size = 18, face = "italic"),
+        legend.title = element_text(size = 18),
+        axis.text = element_text(size=10),
+        axis.title = element_text(size=24),
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
+  labs(y = "Relative Gene Expression")
+print(log_plot)
+ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/relative_gene_expression_test_qpcr.png", 
+       plot = log_plot, 
        width = 10, 
        height = 8, 
        dpi = 600)

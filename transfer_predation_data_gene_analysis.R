@@ -4,12 +4,12 @@ library(coin)
 library(ggsignif)
 library(RefSeeker)
 
-ct_data_1 <- read.table("C:/Users/User/OneDrive/Documents/Research/Data analysis/ACT_GAP_LAC_transfer_predation_samples_4_nov_2026.txt",
+ct_data_1 <- read.table("C:/Users/pheebsy/OneDrive/Documents/Research/Data analysis/ACT_GAP_LAC_transfer_predation_samples_4_nov_2026.txt",
                       header = TRUE, sep = "\t") 
 
 colnames(ct_data_1) <- c("Group", "Well", "Target", "Content", "Sample", "Cq")
 
-ct_data_2 <- read.table("C:/Users/User/OneDrive/Documents/Research/Data analysis/URE_CAP_COX_transfer_predation_ct_values.txt",
+ct_data_2 <- read.table("C:/Users/pheebsy/OneDrive/Documents/Research/Data analysis/URE_CAP_COX_transfer_predation_ct_values.txt",
                         header = TRUE, sep = "\t")
 
 colnames(ct_data_2) <- c("Well", "Target", "Content", "Sample", "Group", "Cq")
@@ -120,13 +120,13 @@ normalised_plot <- plot_normalised_data %>%
   theme(strip.text = element_text(face = "italic"),
         legend.text = element_text(size = 18),
         legend.title = element_text(size = 18),
-        axis.text = element_text(size=10),
+        axis.text = element_text(size=14),
         axis.title = element_text(size=24),
         axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
   labs(y = "Normalised Counts")
 
 print(normalised_plot)
-ggsave("C:/Users/User/OneDrive/Documents/Research/Results/normalised_counts_transfer_qpcr.png", 
+ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/normalised_counts_transfer_qpcr.png", 
        plot = normalised_plot, 
        width = 10, 
        height = 8, 
@@ -159,17 +159,105 @@ log_plot <- plot_log_data %>%
   theme(strip.text.y = element_text(face = "italic"),
         legend.text = element_text(size = 18, face = "italic"),
         legend.title = element_text(size = 18),
-        axis.text = element_text(size=10),
+        axis.text = element_text(size=14),
         axis.title = element_text(size=24),
         axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
   labs(y = "Relative Gene Expression")
 print(log_plot)
-ggsave("C:/Users/User/OneDrive/Documents/Research/Results/relative_gene_expression_transfer_qpcr.png", 
+ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/relative_gene_expression_transfer_qpcr.png", 
        plot = log_plot, 
        width = 10, 
        height = 8, 
        dpi = 600)
 
+# plots with old data ----
+
+pick_predation_data <- read.table("C:/Users/pheebsy/Dev/Coding/Masters Stats R/Data-analysis-Masters/test_predation_gene_analysis_data.txt",
+                                  header = TRUE, sep = "\t")
+
+combined_analysis <- rbind(result_dCt, pick_predation_data)
+
+plot_log_data_all <- combined_analysis %>%
+  filter(Group != "Naive")%>%
+  dplyr::select(Target, Sample, Group, log2fCh)
+
+gene_cols <- c("Lac 1" = "#5e3c99",
+               "Ure 5" = "#e66101",
+               "CAP 10" = "#b2abd2",
+               "COX 1" = "#fdb863")
+
+log_plot <- plot_log_data_all %>%
+  ggplot(aes(x = Sample, y = log2fCh, fill = Target))+
+  geom_col(position = position_dodge(width = 0.7), width = 0.6) +
+  geom_hline(yintercept = 0) +
+  facet_grid(Target ~ Group, scales = "free", space = "free_x")+
+  scale_fill_manual(values = gene_cols)+
+  scale_x_discrete(labels = c("CECN 24h C1" = "Chunk", 
+                              "CECN 24h F1" = "Filter paper",
+                              "CECN 24h W1" = "Wash",
+                              "CECN 48h F1" = "48h Filter paper",
+                              "37CN 1" = "37 °C 1",
+                              "37CN 2" = "37 °C 2",
+                              "CNCE(25)" = "48h Picked", 
+                              "CN(25)" = "25 °C",
+                              "CN(37)" = "37 °C"))+
+  theme_classic() +
+  theme(strip.text.y = element_text(face = "italic"),
+        legend.text = element_text(size = 18, face = "italic"),
+        legend.title = element_text(size = 18),
+        axis.text = element_text(size=14),
+        axis.title = element_text(size=24),
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
+  labs(y = "Relative Gene Expression")
+print(log_plot)
+ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/relative_gene_expression_all_predation_tests.png", 
+       plot = log_plot, 
+       width = 10, 
+       height = 8, 
+       dpi = 600)
+
+
+
+plot_normalised_data_all <- combined_analysis %>%
+  dplyr::select(Target, Sample, dCt, Group)
+
+group_cols <- c("Naive" = "#66c2a5",
+                "Temp" = "#74a9cf", 
+                "Predated" = "#a50f15")
+
+normalised_plot <- plot_normalised_data_all %>% 
+  ggplot(aes(x = Sample, y = dCt, fill = Group))+
+  geom_col(position = position_dodge(width = 0.7), width = 0.6) +
+  geom_hline(yintercept = 0) +
+  facet_wrap(~ Target, scales = "free_y")+
+  scale_fill_manual(values = group_cols)+
+  scale_x_discrete(labels = c("CECN 24h C1" = "Chunk", 
+                              "CECN 24h F1" = "Filter paper",
+                              "CECN 24h W1" = "Wash",
+                              "CECN 48h F1" = "48h Filter paper",
+                              "37CN 1" = "37 °C 1",
+                              "37CN 2" = "37 °C 2",
+                              "25CN 1" = "25 °C 1",
+                              "25CN 2" = "25 °C 2",
+                              "25Cn 3" = "25 °C 3",
+                              "CNCE(25)" = "48h Picked", 
+                              "CN(25)" = "25 °C",
+                              "CN(37)" = "37 °C"))+
+  theme_classic() +
+  theme(strip.text = element_text(face = "italic"),
+        legend.text = element_text(size = 18),
+        legend.title = element_text(size = 18),
+        axis.text = element_text(size=14),
+        axis.title = element_text(size=24),
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
+  labs(y = "Normalised Counts")
+
+print(normalised_plot)
+ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/normalised_counts_all_predation_tests.png", 
+       plot = normalised_plot, 
+       width = 10, 
+       height = 8, 
+       dpi = 600)
 # Check stability, collapse into only genes, then run rs ----
 # ct_clean <- ct_data_1 %>%
 #   filter(Sample != "NTC", Sample != "NRT", Target != "Lac 1") %>%
