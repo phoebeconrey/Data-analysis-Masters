@@ -1,8 +1,8 @@
 library(tidyverse)
 library(ggsignif)
-library(ggh4x)
+library(ggpubr)
 
-uncollapsed_data <- read.table("C:/Users/User/OneDrive/Documents/Research/Data analysis/noncedo_relative_quant-qPCR_MBRT.txt",
+uncollapsed_data <- read.table("C:/Users/pheebsy/OneDrive/Documents/Research/Data analysis/noncedo_relative_quant-qPCR_MBRT.txt",
                                header = TRUE, sep = "\t")
 colnames(uncollapsed_data) <- c("Time", "Rep", "Sample", "Ratio", "Gene", "dCt", "fCh")
 
@@ -27,9 +27,9 @@ time_cols <- c("2" = "#dc267f",
 
 normalised_expression_plot <- mean_data %>%
   ggplot(aes(x = Sample, y = dCt, fill = factor(Time)))+
-  geom_col(position = position_dodge(width = 0.6), width = 0.6) +
+  geom_col(position = position_dodge(width = 0.7), width = 0.6) +
   geom_hline(yintercept = 0) +
-  facet_grid2(Gene ~ Ratio, scales = "free_y")+
+  facet_grid(Gene ~ Ratio)+
   scale_fill_manual(name = "Time (h)", values = time_cols)+
   theme_classic() +
   theme(strip.text.x.top = element_text(size = 12),
@@ -42,24 +42,45 @@ normalised_expression_plot <- mean_data %>%
   labs(y = "Normalised Expression")
 
 print(normalised_expression_plot)
-ggsave("C:/Users/User/OneDrive/Documents/Research/Results/noncedo_qPCR_normalise_expression_plot.png", 
+ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/noncedo_qPCR_normalise_expression_plot.png", 
        plot = normalised_expression_plot, 
        width = 10, 
        height = 8, 
        dpi = 600)
 
 #Plot FCh
-
 log2fCh_expression <- mean_data %>%
-  filter(Sample != "PBS: MØ")%>%
+  filter(Sample != "PBS: MØ", Gene != "TGF-β", Ratio != "(1:1)")%>%
   mutate(log2fCh = log2(FCh))
 
 print(log2fCh_expression)
 
+time_levels <- levels(factor(log2fCh_expression$Time))
+sample_levels <- levels(factor(log2fCh_expression$Sample))
+n_times <- length(time_levels)
+dodge_w <- 0.8
+
+bar_x <- function(sample, time) {
+  match(sample, sample_levels) +
+    (match(time, time_levels) - (n_times +1)/2)*dodge_w / n_times
+}
+
+sig <- data.frame(
+  Gene = "IL-10",
+  xmin = bar_x("CN: MØ", "2"),
+  xmax = bar_x("CN: MØ", "4"),
+  y = 3,
+  label = "**"
+)
+
 relative_expression_plot <- log2fCh_expression %>%
-  ggplot(aes(x = Ratio, y = log2fCh, fill = factor(Time)))+
-  geom_col(position = position_dodge(width = 0.7), width = 0.6) +
+  ggplot(aes(x = Sample, y = log2fCh, fill = factor(Time)))+
+  geom_col(position = position_dodge(width = 0.8), width = 0.7) +
   geom_hline(yintercept = 0) +
+  geom_signif(data = sig,
+               aes( xmin = xmin, xmax = xmax, annotations = label, y_position = y),
+              manual = TRUE, inherit.aes = FALSE, 
+              tip_length = 0.02, textsize = 6, vjust = 0.4)+
   facet_grid(~ Gene, scales = "free_y")+
   scale_fill_manual(name = "Time (h)", values = time_cols)+
   theme_classic() +
@@ -67,12 +88,12 @@ relative_expression_plot <- log2fCh_expression %>%
         legend.text = element_text(size = 14),
         legend.title = element_text(size = 16),
         axis.text = element_text(size=14),
-        axis.title = element_text(size=20),
-        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
+        axis.title = element_text(size=19),
+        axis.title.x = element_blank())+
   labs(y = "Relative Expression")
 
 print(relative_expression_plot)
-ggsave("C:/Users/User/OneDrive/Documents/Research/Results/noncedo_qPCR_relative_expression_plot.png", 
+ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/noncedo_qPCR_relative_expression_plot.png", 
        plot = relative_expression_plot, 
        width = 10, 
        height = 8, 

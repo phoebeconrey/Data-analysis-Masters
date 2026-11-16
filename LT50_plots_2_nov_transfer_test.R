@@ -3,8 +3,9 @@ library(dplyr)
 library(drc)
 library(ggplot2)
 library(ggbreak)
+library(ggnewscale)
 
-survival_data <- read.table("C:/Users/User/OneDrive/Documents/Research/Data analysis/24h_arrest_predation_transfer_type.txt",
+survival_data <- read.table("C:/Users/pheebsy/OneDrive/Documents/Research/Data analysis/24h_arrest_predation_transfer_type.txt",
                             header = TRUE, sep = "\t")
 
 colnames(survival_data) <- c("Time", "Transfer", "E. coli", "C. neoformans", "S. cerevisiae")
@@ -27,33 +28,107 @@ mean_data <- adjusted_data %>%
   group_by(Food, Time) %>%
   summarise(Survival_pct = mean(Survival_pct), .groups = "drop")
 
-food_cols <- c("E. coli" = "#e66101",
-               "C. neoformans" = "#5e3c99",
+food_cols <- c("E. coli" = "#ffb000",
+               "C. neoformans" = "#dc267f",
                "S. cerevisiae" = "#b2abd2")
 sample_cols <- c("Filter" = "#FDB833",
                  "Chunk" = "#05204A",
                  "Wash" = "#DD1C1A")
-#Normal Death curve ----
-survival_plot <- ggplot() +
-  geom_step(data = mean_data,
+#Chunk death curve ----
+adjusted_data_chunk <- adjusted_data%>%
+  filter(Transfer != "Filter", Transfer != "Wash", Time>3)
+
+survival_plot_chunk <- ggplot() +
+  geom_step(data = adjusted_data_chunk,
             aes(x = Time, y = Survival_pct, colour = Food), direction = "hv", linewidth = 1.5)+
-  geom_point(data = adjusted_data, 
-             aes (x = Time, y = Survival_pct, fill = Transfer), alpha = 0.3, size = 3) +
-  geom_point(data = mean_data, 
-             aes (x = Time, y = Survival_pct, colour = Food), size = 3)+
+  geom_point(data = adjusted_data_chunk, 
+             aes (x = Time, y = Survival_pct, colour = Food), size = 3) +
+  scale_colour_manual(name = "Food Source",values = food_cols,
+                      labels = function(x) parse(text = paste0("italic('", x, "')")))+
   labs(title = NULL, x = "Time (hours)",
        y = "% Survival", colour = "Food Source")+
   
+  theme_classic()+
+  theme(legend.text = element_text(size = 16),
+        legend.title = element_text(size = 18),
+        axis.text = element_text(size=20),
+        axis.title = element_text(size=24))
+print(survival_plot_chunk)
+ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/LT50_chunk_plot.png",
+       plot = survival_plot_chunk, width = 10, height = 10, dpi = 600)
+
+#Filter death curve ----
+adjusted_data_filter <- adjusted_data%>%
+  filter(Transfer != "Chunk", Transfer != "Wash", Time>3)
+
+survival_plot_filter <- ggplot() +
+  geom_step(data = adjusted_data_filter,
+            aes(x = Time, y = Survival_pct, colour = Food), direction = "hv", linewidth = 1.5)+
+  geom_point(data = adjusted_data_filter, 
+             aes (x = Time, y = Survival_pct, colour = Food), size = 3) +
   scale_colour_manual(name = "Food Source",values = food_cols,
                       labels = function(x) parse(text = paste0("italic('", x, "')")))+
-  scale_fill_manual(name = "Transfer Type", values = sample_cols)+
+  labs(title = NULL, x = "Time (hours)",
+       y = "% Survival", colour = "Food Source")+
+  
+  theme_classic()+
+  theme(legend.text = element_text(size = 16),
+        legend.title = element_text(size = 18),
+        axis.text = element_text(size=20),
+        axis.title = element_text(size=24))
+print(survival_plot_filter)
+ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/LT50_filter_plot.png",
+       plot = survival_plot_filter, width = 10, height = 10, dpi = 600)
+
+#Wash death curve ----
+adjusted_data_wash <- adjusted_data%>%
+  filter(Transfer != "Chunk", Transfer != "Filter", Time>3)
+
+survival_plot_wash <- ggplot() +
+  geom_step(data = adjusted_data_wash,
+            aes(x = Time, y = Survival_pct, colour = Food), direction = "hv", linewidth = 1.5)+
+  geom_point(data = adjusted_data_wash, 
+             aes (x = Time, y = Survival_pct, colour = Food), size = 3) +
+  scale_colour_manual(name = "Food Source",values = food_cols,
+                      labels = function(x) parse(text = paste0("italic('", x, "')")))+
+  labs(title = NULL, x = "Time (hours)",
+       y = "% Survival", colour = "Food Source")+
+  
+  theme_classic()+
+  theme(legend.text = element_text(size = 16),
+        legend.title = element_text(size = 18),
+        axis.text = element_text(size=20),
+        axis.title = element_text(size=24))
+print(survival_plot_wash)
+ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/LT50_wash_plot.png",
+       plot = survival_plot_wash, width = 10, height = 10, dpi = 600)
+
+#Normal Death curve ----
+normal_plot <- mean_data %>%
+  filter(Food != "S. cerevisiae", Time>=3)
+
+adj <- adjusted_data%>%
+  filter(Food != "S. cerevisiae", Time>=3)
+
+survival_plot <- ggplot() +
+  geom_step(data = normal_plot,
+            aes(x = Time, y = Survival_pct, colour = Food), direction = "hv", linewidth = 1.5)+
+  geom_point(data = adj, 
+             aes (x = Time, y = Survival_pct, colour = Food), alpha = 0.6, size = 3) +
+  geom_point(data = normal_plot, 
+             aes (x = Time, y = Survival_pct, colour = Food), size = 3)+
+  scale_colour_manual(name = "Food Source",values = food_cols,
+                      labels = function(x) parse(text = paste0("italic('", x, "')")))+
+  labs(title = NULL, x = "Time (hours)",
+       y = "% Survival", colour = "Food Source")+
+  
   theme_classic()+
   theme(legend.text = element_text(size = 16),
         legend.title = element_text(size = 18),
         axis.text = element_text(size=20),
         axis.title = element_text(size=24))
 print(survival_plot)
-ggsave("C:/Users/User/OneDrive/Documents/Research/Results/LT50_transfer_test_plot.png",
+ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/LT50_transfer_test_plot.png",
        plot = survival_plot, width = 10, height = 8, dpi = 600)
 
 
@@ -86,7 +161,7 @@ other_transfer_plot <- ggplot()+
         axis.text = element_text(size=20),
         axis.title = element_text(size=24))
 print(other_transfer_plot)
-ggsave("C:/Users/User/OneDrive/Documents/Research/Results/LT50_transfer_survival_plot.png", 
+ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/LT50_transfer_survival_plot.png", 
        plot = other_transfer_plot, width = 10, height = 8, dpi = 600)
 
 #transfer_plot <- adjusted_data %>%
@@ -99,7 +174,7 @@ ggsave("C:/Users/User/OneDrive/Documents/Research/Results/LT50_transfer_survival
   #scale_colour_manual(values = trans_cols)+
   #theme_classic()
 #print(transfer_plot)
-ggsave("C:/Users/User/OneDrive/Documents/Research/Results/LT50_transfer_comparison_test_plot.png", plot = other_transfer_plot, width = 10, height = 8, dpi = 600)
+#ggsave("C:/Users/User/OneDrive/Documents/Research/Results/LT50_transfer_comparison_test_plot.png", plot = other_transfer_plot, width = 10, height = 8, dpi = 600)
 
 lt50_model <- drm(Dead/Total ~ Time, weights = Total, curveid = Food,
                   data = adjusted_data, fct = LL.2(), type = "binomial")
