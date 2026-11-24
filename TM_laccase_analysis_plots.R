@@ -8,30 +8,35 @@ laccase_raw <- read.table("C:/Users/pheebsy/OneDrive/Documents/Research/Data ana
 
 collapsed_laccase <- laccase_raw %>%
   group_by(Time, Temp, Condition)%>%
-  summarise(Abs = mean(Abs, na.rm = TRUE), .groups = "drop")
+  group_by(Time, Temp, Condition)%>%
+  summarise( u_sd = sd(Abs, na.rm = TRUE),
+             n = sum(!is.na(Abs)),
+             abs_mean = mean(Abs, na.rm = TRUE),
+             .groups = "drop") %>%
+  mutate(u_se = u_sd/sqrt(n))
 
 clean_laccase <- collapsed_laccase[-25,]
 
 print(clean_laccase, n = 24)
 
-
-
-print(shapiro.test(clean_laccase$Abs))
-
-wide <- clean_laccase %>%
-  pivot_wider(names_from = Condition, values_from = Abs)
+# 
+# 
+# print(shapiro.test(clean_laccase$Abs))
+# 
+# wide <- clean_laccase %>%
+#   pivot_wider(names_from = Condition, values_from = Abs)
 
 ## MM vs YM broth ----
 
-cond_tests <- wide %>%
-  group_by(Temp)%>%
-  group_modify(~{
-    t <- wilcox.test(.x$MM, .x$'YM Broth', paired = TRUE)
-    tribble(n_pairs = nrow(.x), V = unname(t$statistic), p = t$p.value)
-  })%>%
-  ungroup()
-
-print(cond_tests)
+# cond_tests <- wide %>%
+#   group_by(Temp)%>%
+#   group_modify(~{
+#     t <- wilcox.test(.x$MM, .x$'YM Broth', paired = TRUE)
+#     tribble(n_pairs = nrow(.x), V = unname(t$statistic), p = t$p.value)
+#   })%>%
+#   ungroup()
+# 
+# print(cond_tests)
 
 #function
 
@@ -45,13 +50,6 @@ bar_x <- function(sample, time) {
     (match(time, time_levels) - (n_times +1)/2)*dodge_w / n_times
 }
 
-sig <- data.frame(
-  Gene = "IL-10",
-  xmin = bar_x("CN: MØ", "2"),
-  xmax = bar_x("CN: MØ", "4"),
-  y = 3,
-  label = "**"
-)
 
 orig <- c(0.5, 1, 1.5, 2, 24, 48)
 comp <- c(0.5, 1, 1.5, 2, 2.5, 3)   # smaller steps = narrower gaps; adjust to taste
@@ -65,16 +63,31 @@ broken <- new_transform("broken", transform = fwd, inverse = inv)
 cond_cols <- c("YM Broth" =  "#ffb000",
                "MM" = "#dc267f")
 
+temp_cols <- c("25" =  "#ffb000",
+               "37" = "#dc267f")
+
 plot_laccase <- clean_laccase%>%
-  filter(Time %in% c("0.5", "48"))
+  filter(Time %in% c("0.5", "48"), Condition != "MM")
 
 laccase_plot_simple <- plot_laccase %>%
-  ggplot(aes(x = factor(Time), y = Abs, fill = Condition))+
+  ggplot(aes(x = factor(Time), y = abs_mean, fill = factor(Temp)))+
   geom_col(position = position_dodge(width = 0.8), width = 0.7)+
-  facet_wrap(~ Temp)+
-  scale_fill_manual(values = cond_cols)+
-  theme_classic()
+  scale_fill_manual(values = temp_cols)+
+  geom_errorbar(aes(ymin = abs_mean - u_se, ymax = abs_mean + u_se),
+                position = position_dodge(width = 0.9),
+                width = 0.05)+
+  theme_classic()+
+  theme(axis.text = element_text(size=14),
+        axis.title = element_text(size=20),
+        legend.title = element_text(size = 18),
+        legend.text = element_text(size = 14))+
+  labs(y = "Abs (490 nm)", x = "Time (h)", fill = "Temperature (°C)")
 print(laccase_plot_simple)
+ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/TM_Laccase_plot_bar.png", 
+              plot = laccase_plot_simple,
+              width = 10,
+              height = 8,
+              dpi = 600)
 
 # #Plot Figure
 # 

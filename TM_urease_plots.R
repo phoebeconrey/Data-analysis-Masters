@@ -8,7 +8,11 @@ urease_raw <- read.table("C:/Users/pheebsy/OneDrive/Documents/Research/Data anal
 
 collapsed_urease <- urease_raw %>%
   group_by(Time, Temp, Condition)%>%
-  summarise(Abs = mean(Abs, na.rm = TRUE), .groups = "drop")
+  summarise( u_sd = sd(Abs, na.rm = TRUE),
+             n = sum(!is.na(Abs)),
+             abs_mean = mean(Abs, na.rm = TRUE),
+             .groups = "drop") %>%
+  mutate(u_se = u_sd/sqrt(n))
 
 clean_urease <- collapsed_urease[-25,]
 
@@ -31,41 +35,48 @@ cond_cols <- c("YM Broth" =  "#ffb000",
 plot_urease <- clean_urease%>%
   filter(Time %in% c("0.5", "48"))
 
-urease_plot_simple <- plot_urease %>%
-  ggplot(aes(x = factor(Time), y = Abs, fill = Condition))+
-  geom_col(position = position_dodge(width = 0.8), width = 0.7)+
-  facet_wrap(~ Temp)+
-  scale_fill_manual(values = cond_cols)+
-  theme_classic()
-print(urease_plot_simple)
+# urease_plot_simple <- plot_urease %>%
+#   ggplot(aes(x = factor(Time), y = abs_mean, fill = Condition))+
+#   geom_col(position = position_dodge(width = 0.8), width = 0.7)+
+#   facet_wrap(~ Temp)+
+#   scale_fill_manual(values = cond_cols)+
+#   theme_classic()
+# print(urease_plot_simple)
 
 #Plot Figure
+
+clean_urease_fil <- clean_urease %>%
+  filter(Condition != "MM")
+
 
 temp_cols <- c("25" =  "#ffb000",
                "37" = "#dc267f")
 
-urease_plot <- clean_urease %>%
-  ggplot(aes(x = Time, y = Abs, colour = factor(Temp)))+
-  geom_line(linewidth = 1)+
-  geom_point(size = 2)+
-  facet_grid(~ Condition, scales = "free_x", space = "free_x")+
+urease_plot <- clean_urease_fil %>%
+  ggplot(aes(x = Time, y = abs_mean, colour = factor(Temp)))+
+  geom_line(linewidth = 2)+
+  geom_point(size = 3.5)+
   scale_x_continuous(
     transform = broken,
     breaks = c(0.5, 1, 2, 24, 48)) +
   annotate("text", x = 13, y = -Inf, label = "//", vjust = 1.2, size = 5) +
   annotate("text", x = 36, y = -Inf, label = "//", vjust = 1.2, size = 5) +
   coord_cartesian(clip = "off")+
+  geom_errorbar(aes(ymin = abs_mean - u_sd, ymax = abs_mean + u_sd),
+                width = 0.05)+
   scale_colour_manual(values = temp_cols)+
   theme_classic()+
   theme(strip.text= element_text(size = 12),
         legend.text = element_text(size = 14),
         legend.title = element_text(size = 16),
         axis.text = element_text(size=14),
-        axis.title = element_text(size=20))+
-  labs(y = "Abs (490 nm)", x = "Time (h)", colour = "Temp (°C)")
-print(laccase_plot)
-ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/TM_Laccase_plot.png", 
-       plot = laccase_plot, 
+        axis.title = element_text(size=20),
+        legend.position = c(0.2, 0.8))+
+  labs(y = "Abs (570 nm)", x = "Time (h)", colour = "Temp (°C)")
+
+print(urease_plot)
+ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/TM_Urease_plot.png", 
+       plot = urease_plot, 
        width = 10, 
        height = 8, 
        dpi = 600)
