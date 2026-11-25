@@ -63,14 +63,14 @@ broken <- new_transform("broken", transform = fwd, inverse = inv)
 cond_cols <- c("YM Broth" =  "#ffb000",
                "MM" = "#dc267f")
 
-temp_cols <- c("25" =  "#ffb000",
-               "37" = "#dc267f")
+temp_cols <- c("0.5" =  "#ffb000",
+               "48" = "#dc267f")
 
 plot_laccase <- clean_laccase%>%
   filter(Time %in% c("0.5", "48"), Condition != "MM")
 
 laccase_plot_simple <- plot_laccase %>%
-  ggplot(aes(x = factor(Time), y = abs_mean, fill = factor(Temp)))+
+  ggplot(aes(x = factor(Temp), y = abs_mean, fill = factor(Time)))+
   geom_col(position = position_dodge(width = 0.8), width = 0.7)+
   scale_fill_manual(values = temp_cols)+
   geom_errorbar(aes(ymin = abs_mean - u_se, ymax = abs_mean + u_se),
@@ -80,12 +80,13 @@ laccase_plot_simple <- plot_laccase %>%
   theme(axis.text = element_text(size=14),
         axis.title = element_text(size=20),
         legend.title = element_text(size = 18),
-        legend.text = element_text(size = 14))+
-  labs(y = "Abs (490 nm)", x = "Time (h)", fill = "Temperature (°C)")
+        legend.text = element_text(size = 14),
+        legend.position = c(0.25, 0.85))+
+  labs(y = "Abs (490 nm)", x = "Temperature °C", fill = "Time (h)")
 print(laccase_plot_simple)
-ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/TM_Laccase_plot_bar.png", 
+ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/TM_Laccase_plot_bar_2.png", 
               plot = laccase_plot_simple,
-              width = 10,
+              width = 5,
               height = 8,
               dpi = 600)
 

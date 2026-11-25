@@ -304,6 +304,80 @@ ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/relative_gene_expre
        height = 8, 
        dpi = 600)
 
+#MBRT Individual Plots ----
+#CAP Plot
+mean_fCh_data <- result_dCt %>%
+  filter(Sample != "CECN 48h F1") %>%
+  group_by(Target, Group)%>%
+  summarise(mean_fCh = mean(fCh, na.rm = TRUE),
+            sd = sd(fCh, na.rm = TRUE),
+            sem = sd / sqrt(sum(!is.na(fCh))),
+            .groups = "drop")
+
+print(mean_fCh_data)
+
+plot_fCh_cap <- mean_fCh_data %>%
+  filter(!Target %in% c("COX 1", "Lac 1", "Ure 5"), Group != "Predated")
+
+print(plot_fCh_cap)
+
+gene_cols <- c("Lac 1" = "#e66101",
+               "CAP 10" = "#2E2585")
+group_cols <- c("Naive" = "#e66101",
+               "Temp" = "#2E2585")
+
+fCh_plot_cap <- plot_fCh_cap %>%
+  ggplot(aes(x = Group, y = mean_fCh, fill = Target))+
+  geom_col(position = position_dodge(width = 0.7), width = 0.6) +
+  geom_hline(yintercept = 0) +
+  geom_errorbar(
+    aes(ymin = mean_fCh - sem, ymax = mean_fCh + sem),
+    position = position_dodge(width = 0.9),
+    width = 0.2)+
+  scale_fill_manual(values = gene_cols)+
+  scale_x_discrete(labels = c("Naive" = "25 °C",
+                              "Temp" = "37 °C"))+
+  theme_classic() +
+  theme(axis.text = element_text(size=14),
+        axis.title = element_text(size=24),
+        legend.position = "none")+
+  labs(y = "Relative Expression (Fold Change)", x = NULL, fill = NULL)
+print(fCh_plot_cap)
+ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/cap_plot_MBRT.png", 
+       plot = fCh_plot_cap, 
+       width = 5, 
+       height = 8, 
+       dpi = 600)
+
+#Laccase Plot
+plot_fCh_lac <- mean_fCh_data %>%
+  filter(!Target %in% c("COX 1", "CAP 10", "Ure 5"), Group != "Predated")
+
+print(plot_fCh_lac)
+
+fCh_plot_lac <- plot_fCh_lac %>%
+  ggplot(aes(x = Group, y = mean_fCh, fill = Target))+
+  geom_col(position = position_dodge(width = 0.7), width = 0.6) +
+  geom_hline(yintercept = 0) +
+  geom_errorbar(
+    aes(ymin = mean_fCh - sem, ymax = mean_fCh + sem),
+    position = position_dodge(width = 0.9),
+    width = 0.2)+
+  scale_fill_manual(values = gene_cols)+
+  scale_x_discrete(labels = c("Naive" = "25 °C",
+                              "Temp" = "37 °C"))+
+  theme_classic() +
+  theme(axis.text = element_text(size=14),
+        axis.title = element_text(size=24),
+        legend.position = "none")+
+  labs(y = "Relative Expression (Fold Change)", x = NULL, fill = NULL)
+print(fCh_plot_lac)
+ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/lac_plot_MBRT.png", 
+       plot = fCh_plot_lac, 
+       width = 5, 
+       height = 8, 
+       dpi = 600)
+
 # Check stability, collapse into only genes, then run rs ----
 # ct_clean <- ct_data_1 %>%
 #   filter(Sample != "NTC", Sample != "NRT", Target != "Lac 1") %>%
