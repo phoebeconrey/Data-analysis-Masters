@@ -33,20 +33,30 @@ print(collapsed_capsule)
 
 
 temp_cols <- c("25" =  "#ffb000",
-               "37" = "#dc267f")
+               "37" = "#ffd880")
 
 #Box plot ----
 box_cap_plot <- ggplot(capsule_clean, aes(x = factor(Temperature), y = Capsule, fill = factor(Temperature)))+
   geom_point(aes(colour = factor(Temperature)), position = position_jitterdodge(jitter.width = 0.15), alpha = 0.5)+
   geom_boxplot(outlier.shape = NA, staplewidth = 0.4)+
+  geom_signif(
+    comparisons = list(c("25", "37")),  # exact x-axis labels
+    annotations = "***",                                   # your external result
+    y_position  = max(collapsed_capsule$Capsule_mean) * 1.9,
+    tip_length  = 0.02,
+    textsize    = 10
+  ) +
+  scale_x_discrete(labels = c(
+    "25" = "25 °C", 
+    "37" = "37 °C"))+
   scale_fill_manual(values = temp_cols)+
   scale_colour_manual(values = temp_cols)+
   theme_classic()+
   theme(strip.text= element_text(size = 12),
-        axis.text = element_text(size=14),
+        axis.text = element_text(size=16),
         axis.title = element_text(size=20),
         legend.position = "none")+
-  labs(y = "Capsule (μm)", x = "Temperature (°C)", fill = NULL)
+  labs(y = "Capsule (μm)", x = NULL, fill = NULL)
  
 
 print(box_cap_plot)

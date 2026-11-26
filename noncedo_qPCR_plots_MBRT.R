@@ -35,6 +35,7 @@ log2fCh_expression <- mean_data %>%
   mutate(log2fCh = log2(FCh))
 
 print(log2fCh_expression)
+
 time_levels <- levels(factor(log2fCh_expression$Time))
 sample_levels <- levels(factor(log2fCh_expression$Sample))
 n_times <- length(time_levels)
@@ -119,7 +120,7 @@ fch_plot <- ggplot(bars, aes(x = Gene, y = FCh, fill = Group)) +
         axis.title.y = element_text(size = 19),
         legend.text = element_text(size = 14),
         legend.position = c(0.3, 0.8)) +
-  labs(y = "Relative Expression (Fold Change)")
+  labs(y = "Fold Change")
 print(fch_plot)
 ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/noncedo_qPCR_fch.png", 
        plot = fch_plot, 

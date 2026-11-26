@@ -321,7 +321,7 @@ plot_fCh_cap <- mean_fCh_data %>%
 
 print(plot_fCh_cap)
 
-gene_cols <- c("Lac 1" = "#e66101",
+gene_cols <- c("Lac 1" = "#E0DEF6",
                "CAP 10" = "#2E2585")
 group_cols <- c("Naive" = "#e66101",
                "Temp" = "#2E2585")
@@ -329,7 +329,7 @@ group_cols <- c("Naive" = "#e66101",
 fCh_plot_cap <- plot_fCh_cap %>%
   ggplot(aes(x = Group, y = mean_fCh, fill = Target))+
   geom_col(position = position_dodge(width = 0.7), width = 0.6) +
-  geom_hline(yintercept = 0) +
+  geom_hline(yintercept = 1, linetype = "dashed") +
   geom_errorbar(
     aes(ymin = mean_fCh - sem, ymax = mean_fCh + sem),
     position = position_dodge(width = 0.9),
@@ -338,10 +338,10 @@ fCh_plot_cap <- plot_fCh_cap %>%
   scale_x_discrete(labels = c("Naive" = "25 °C",
                               "Temp" = "37 °C"))+
   theme_classic() +
-  theme(axis.text = element_text(size=14),
+  theme(axis.text = element_text(size=16),
         axis.title = element_text(size=24),
         legend.position = "none")+
-  labs(y = "Relative Expression (Fold Change)", x = NULL, fill = NULL)
+  labs(y = expression(italic("CAP10") ~ "Fold Change"), x = NULL, fill = NULL)
 print(fCh_plot_cap)
 ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/cap_plot_MBRT.png", 
        plot = fCh_plot_cap, 
@@ -358,7 +358,7 @@ print(plot_fCh_lac)
 fCh_plot_lac <- plot_fCh_lac %>%
   ggplot(aes(x = Group, y = mean_fCh, fill = Target))+
   geom_col(position = position_dodge(width = 0.7), width = 0.6) +
-  geom_hline(yintercept = 0) +
+  geom_hline(yintercept = 1, linetype = "dashed") +
   geom_errorbar(
     aes(ymin = mean_fCh - sem, ymax = mean_fCh + sem),
     position = position_dodge(width = 0.9),
@@ -367,10 +367,10 @@ fCh_plot_lac <- plot_fCh_lac %>%
   scale_x_discrete(labels = c("Naive" = "25 °C",
                               "Temp" = "37 °C"))+
   theme_classic() +
-  theme(axis.text = element_text(size=14),
+  theme(axis.text = element_text(size=16),
         axis.title = element_text(size=24),
         legend.position = "none")+
-  labs(y = "Relative Expression (Fold Change)", x = NULL, fill = NULL)
+  labs(y = expression(italic("Lac 1") ~ "Fold Change"), x = NULL, fill = NULL)
 print(fCh_plot_lac)
 ggsave("C:/Users/pheebsy/OneDrive/Documents/Research/Results/lac_plot_MBRT.png", 
        plot = fCh_plot_lac, 
